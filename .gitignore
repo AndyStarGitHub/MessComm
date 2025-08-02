@@ -1,0 +1,58 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Environment variables
+.env
+
+# Pytest
+.cache/
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Pyre type checker
+.pyre/
+
+# Mypy
+.mypy_cache/
+
+# Pydantic compiled cache
+__pydantic_cache__/
+
+# PyCharm / VSCode
+.idea/
+.vscode/
+
+# Mac/Linux
+.DS_Store
+
+# Logs
+*.log
+
+# Unit test and output files
+tests/__pycache__/
+*.tmp
+*.out
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Uvicorn logs or reload files
+*.reload
+*.pid
