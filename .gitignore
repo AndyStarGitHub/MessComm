@@ -56,3 +56,6 @@ dist/
 # Uvicorn logs or reload files
 *.reload
 *.pid
+
+# DB
+messcomm.db
