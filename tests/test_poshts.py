@@ -1,21 +1,22 @@
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 import ai_moderation
-from models import User, Posht
-
 from loguru import logger
+from main import app
+from models import Posht, User
 
 logger.add("loguru/test_poshts.log")
 
 
 @pytest.mark.asyncio
-async def test_create_posht_unauthorized():
+async def test_create_posht_unauthorized() -> None:
     posht_data = {
         "title": "Unauthorized post",
         "posht_text": "This should not be created",
@@ -28,14 +29,16 @@ async def test_create_posht_unauthorized():
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 @pytest.mark.asyncio
-async def test_create_post_authorized(async_session: AsyncSession):
+async def test_create_post_authorized(async_session: AsyncSession) -> None:
 
     user = User(
         email="testauthorized@example.com",
-        hashed_password=pwd_context.hash("testpassword")
+        hashed_password=pwd_context.hash("testpassword"),
     )
     async_session.add(user)
     await async_session.commit()
@@ -46,21 +49,18 @@ async def test_create_post_authorized(async_session: AsyncSession):
         login_response = await client.post(
             "/login",
             data={"username": "testauthorized@example.com", "password": "testpassword"},
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
         assert login_response.status_code == 200
         access_token = login_response.json()["access_token"]
 
-        posht_data = {
-            "title": "Test post",
-            "posht_text": "This is a clean post"
-        }
+        posht_data = {"title": "Test post", "posht_text": "This is a clean post"}
 
         response = await client.post(
             "/poshts/",
             json=posht_data,
-            headers={"Authorization": f"Bearer {access_token}"}
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -69,18 +69,15 @@ async def test_create_post_authorized(async_session: AsyncSession):
         assert result["posht_text"] == "This is a clean post"
         assert result["user_id"] == user.id
 
-import pytest
-from httpx import AsyncClient
-from httpx import ASGITransport
-from main import app
-
 
 @pytest.mark.asyncio
-async def test_create_post_invalid_data_empty_title(async_session):
+async def test_create_post_invalid_data_empty_title(
+    async_session: AsyncSession,
+) -> None:
 
     user = User(
         email="invalidtitle@example.com",
-        hashed_password=pwd_context.hash("strongpassword")
+        hashed_password=pwd_context.hash("strongpassword"),
     )
     async_session.add(user)
     await async_session.commit()
@@ -91,29 +88,24 @@ async def test_create_post_invalid_data_empty_title(async_session):
         login_response = await client.post(
             "/login",
             data={"username": "invalidtitle@example.com", "password": "strongpassword"},
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
         token = login_response.json()["access_token"]
 
-        invalid_posht = {
-            "title": "",
-            "posht_text": "Text is acceptable"
-        }
+        invalid_posht = {"title": "", "posht_text": "Text is acceptable"}
 
         response = await client.post(
-            "/poshts/",
-            json=invalid_posht,
-            headers={"Authorization": f"Bearer {token}"}
+            "/poshts/", json=invalid_posht, headers={"Authorization": f"Bearer {token}"}
         )
 
         assert response.status_code == 422
 
+
 @pytest.mark.asyncio
-async def test_create_post_with_profanity(async_session):
+async def test_create_post_with_profanity(async_session: AsyncSession) -> None:
     user = User(
-        email="profanity@example.com",
-        hashed_password=pwd_context.hash("testpassword")
+        email="profanity@example.com", hashed_password=pwd_context.hash("testpassword")
     )
     async_session.add(user)
     await async_session.commit()
@@ -136,7 +128,7 @@ async def test_create_post_with_profanity(async_session):
 
             posht_data = {
                 "title": "Test with profanity",
-                "posht_text": "This is fucking bullshit."
+                "posht_text": "This is fucking bullshit.",
             }
 
             response = await client.post(
@@ -149,11 +141,12 @@ async def test_create_post_with_profanity(async_session):
             data = response.json()
             assert data["is_blocked"] is True
 
+
 @pytest.mark.asyncio
-async def test_post_author_is_logged_in_user(async_session: AsyncSession):
+async def test_post_author_is_logged_in_user(async_session: AsyncSession) -> None:
     user = User(
         email="authorcheck@example.com",
-        hashed_password=pwd_context.hash("securepass123")
+        hashed_password=pwd_context.hash("securepass123"),
     )
     async_session.add(user)
     await async_session.commit()
@@ -172,7 +165,7 @@ async def test_post_author_is_logged_in_user(async_session: AsyncSession):
 
         posht_data = {
             "title": "Author Check Title",
-            "posht_text": "This post is for author check."
+            "posht_text": "This post is for author check.",
         }
 
         response = await client.post(

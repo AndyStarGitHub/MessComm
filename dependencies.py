@@ -1,2 +1,0 @@
-SECRET_KEY = "mysecretkey"
-ALGORITHM = "HS256"

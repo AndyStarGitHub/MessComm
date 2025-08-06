@@ -1,20 +1,20 @@
 from datetime import datetime, timedelta
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import User, Comment, Posht
-from passlib.context import CryptContext
 from main import app
+from models import Comment, Posht, User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 @pytest.mark.asyncio
-async def test_comment_analytics_empty(async_session: AsyncSession):
+async def test_comment_analytics_empty(async_session: AsyncSession) -> None:
     user = User(
-        email="analytics1@example.com",
-        hashed_password=pwd_context.hash("testpassword")
+        email="analytics1@example.com", hashed_password=pwd_context.hash("testpassword")
     )
     async_session.add(user)
     await async_session.commit()
@@ -31,17 +31,15 @@ async def test_comment_analytics_empty(async_session: AsyncSession):
         token = login_response.json()["access_token"]
 
         response = await client.get(
-            "/analytics/comments/",
-            headers={"Authorization": f"Bearer {token}"}
+            "/analytics/comments/", headers={"Authorization": f"Bearer {token}"}
         )
 
         assert response.status_code == 200
         assert response.json() == []
 
 
-        
 @pytest.mark.asyncio
-async def test_comments_analytics_multiple_days(async_session):
+async def test_comments_analytics_multiple_days(async_session: AsyncSession) -> None:
     async with async_session as session:
         user = User(email="analytics2@example.com", hashed_password="123")
         session.add(user)
@@ -62,21 +60,21 @@ async def test_comments_analytics_multiple_days(async_session):
                 is_blocked=False,
                 user_id=user.id,
                 posht_id=posht.id,
-                created_at=two_days_ago
+                created_at=two_days_ago,
             ),
             Comment(
                 comment_text="Blocked",
                 is_blocked=True,
                 user_id=user.id,
                 posht_id=posht.id,
-                created_at=yesterday
+                created_at=yesterday,
             ),
             Comment(
                 comment_text="Normal 2",
                 is_blocked=False,
                 user_id=user.id,
                 posht_id=posht.id,
-                created_at=yesterday
+                created_at=yesterday,
             ),
         ]
         session.add_all(comments)
@@ -101,4 +99,3 @@ async def test_comments_analytics_multiple_days(async_session):
             and entry["blocked_count"] == 0
             for entry in data
         )
-
