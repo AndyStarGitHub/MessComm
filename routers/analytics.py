@@ -6,6 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import Comment
 
+from loguru import logger
+
+logger.add("loguru/alanytics.log")
+
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
@@ -13,7 +17,7 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 async def get_comments_analytics(
         db: AsyncSession = Depends(get_db)
 ) -> list[dict[str, Any]]:
-    print("🔥 get_comments_analytics is running!")
+    logger.info("🔥 get_comments_analytics is running!")
 
     query = (
         select(

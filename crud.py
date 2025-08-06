@@ -22,6 +22,10 @@ from schemas import (
 )
 from security import hash_password, decode_token
 
+from loguru import logger
+
+logger.add("loguru/crud.log")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
@@ -49,7 +53,7 @@ async def create_posht(
         posht: PoshtCreate,
         user: User
         ) -> Posht:
-    print("🔥 create_posht is running 2!")
+    logger.info("create_posht is running 2!")
     is_blocked = await check_for_profanity(posht.posht_text)
     new_posht = Posht(
         title=posht.title,
@@ -68,7 +72,7 @@ async def update_posht(
         posht_id: int,
         posht: PoshtUpdate
 ) -> PoshtRead:
-    print("🔥 update_posht is running!")
+    logger.info("update_posht is running!")
     is_blocked = await check_for_profanity(posht.posht_text)
     result = await db.execute(select(Posht).where(Posht.id == posht_id))
     db_posht = result.scalar_one_or_none()
@@ -110,7 +114,7 @@ async def create_user(
 async def get_users_from_db(
         db: AsyncSession = Depends(get_db)
 ) -> UserRead:
-    print("🔥 get_users_from_db is running!")
+    logger.info("get_users_from_db is running!")
     result = await db.execute(select(User))
     users = result.scalars().all()
     return users
@@ -119,7 +123,7 @@ async def get_users_from_db(
 async def get_user_by_email(
         db: AsyncSession,
         email: str) -> User | None:
-    print("🔥 get_current_user_by_email is running!")
+    logger.info("get_current_user_by_email is running!")
     result = await db.execute(select(User).where(User.email == email))
     return result.scalar_one_or_none()
 
@@ -142,9 +146,9 @@ async def get_current_user_by_id(
     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ) -> UserRead:
     payload = decode_token(token)
-    print("🔥 get_current_user_by_id is running!")
-    print("PAYLOAD:")
-    print(payload)
+    logger.info("get_current_user_by_id is running!")
+    logger.info("PAYLOAD:")
+    logger.info(payload)
 
     if payload is None:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -227,14 +231,14 @@ async def create_comment(
     await db.refresh(new_comment)
 
     if not is_blocked:
-        print("🔥 asyncio.create_task(create_auto_reply(db, new_comment)) is running!")
+        logger.info("asyncio.create_task(create_auto_reply(db, new_comment)) is running!")
         asyncio.create_task(create_auto_reply(db, new_comment))
 
     return new_comment
 
 
 async def create_auto_reply(db: AsyncSession, comment: Comment) -> None:
-    print("🔥 create_auto_reply is running!")
+    logger.info("create_auto_reply is running!")
     posht = await db.get(Posht, comment.posht_id)
     if not posht:
         return
@@ -263,7 +267,7 @@ async def create_auto_reply(db: AsyncSession, comment: Comment) -> None:
 
 
 async def create_auto_reply_text(post_text: str, comment_text: str) -> str:
-    print("🔥 create_auto_reply_text is running!")
+    logger.info("create_auto_reply_text is running!")
 
     prompt = (
         "You are an assistant helping to reply to a comment on a social media post.\n"
@@ -277,8 +281,8 @@ async def create_auto_reply_text(post_text: str, comment_text: str) -> str:
     try:
         response = model.generate_content(prompt)
         reply = response.text.strip()
-        print("🤖 Generated reply:", repr(reply))
+        logger.info("Generated reply:", repr(reply))
         return reply
     except Exception as e:
-        print("❌ Error generating auto-reply:", e)
+        logger.info("Error generating auto-reply:", e)
         return "Thank you for your comment!"

@@ -16,6 +16,10 @@ from database import get_db
 from schemas import UserRead, UserCreate
 from security import hash_password
 
+from loguru import logger
+
+logger.add("loguru/users.log")
+
 router = APIRouter()
 
 
@@ -23,7 +27,7 @@ router = APIRouter()
 async def read_users(
         db: AsyncSession = Depends(get_db)
 ) -> List[UserRead]:
-    print("🔥 read_users is running!")
+    logger.info("read_users is running!")
     return await get_users_from_db(db)
 
 

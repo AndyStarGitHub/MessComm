@@ -9,6 +9,10 @@ from starlette import status
 import ai_moderation
 from models import User, Posht
 
+from loguru import logger
+
+logger.add("loguru/test_poshts.log")
+
 
 @pytest.mark.asyncio
 async def test_create_posht_unauthorized():
@@ -117,10 +121,10 @@ async def test_create_post_with_profanity(async_session):
 
     transport = ASGITransport(app=app)
 
-    print("REAL FUNC:", ai_moderation.check_for_profanity)
+    logger.info("REAL FUNC:", ai_moderation.check_for_profanity)
 
     with patch("crud.check_for_profanity", new=AsyncMock(return_value=True)):
-        print("MOCKED FUNC:", ai_moderation.check_for_profanity)
+        logger.info("MOCKED FUNC:", ai_moderation.check_for_profanity)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             login_response = await client.post(
                 "/login",

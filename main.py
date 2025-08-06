@@ -4,7 +4,11 @@ from database import engine
 from models import Base
 from routers import users, poshts, comments, analytics
 
-print("🔥 This is the main.py that is running!")
+from loguru import logger
+
+logger.add("loguru/main.log")
+
+logger.info("This is the main.py that is running!")
 app = FastAPI()
 
 @app.on_event("startup")
@@ -21,9 +25,10 @@ app.include_router(comments.router)
 
 app.include_router(analytics.router)
 
-print("🔥 ROUTES 20250802:")
+logger.info("ROUTES:")
+
 for route in app.routes:
-    print(f"{route.path} [{route.methods}]")
+    logger.info(f"{route.path} [{route.methods}]")
 
 @app.get("/")
 async def root():
