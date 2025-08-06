@@ -2,21 +2,20 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth_util import authenticate_user
 from crud import (
-    get_user_by_email,
-    create_user,
     create_access_token,
-    get_current_user_by_id, get_users_from_db
+    create_user,
+    get_current_user_by_id,
+    get_user_by_email,
+    get_users_from_db,
 )
 from database import get_db
-from schemas import UserRead, UserCreate
-from security import hash_password
-
 from loguru import logger
+from schemas import UserCreate, UserRead
+from security import hash_password
 
 logger.add("loguru/users.log")
 
@@ -24,18 +23,13 @@ router = APIRouter()
 
 
 @router.get("/users", response_model=List[UserRead], tags=["users"])
-async def read_users(
-        db: AsyncSession = Depends(get_db)
-) -> List[UserRead]:
+async def read_users(db: AsyncSession = Depends(get_db)) -> List[UserRead]:
     logger.info("read_users is running!")
     return await get_users_from_db(db)
 
 
 @router.post("/register", response_model=UserRead, tags=["users"])
-async def register(
-        user: UserCreate,
-        db: AsyncSession = Depends(get_db)
-) -> UserRead:
+async def register(user: UserCreate, db: AsyncSession = Depends(get_db)) -> UserRead:
     db_user = await get_user_by_email(db, user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -44,8 +38,7 @@ async def register(
 
 @router.post("/login", tags=["users"])
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ) -> dict:
     user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -56,17 +49,13 @@ async def login(
 
 
 @router.get("/me", response_model=UserRead, tags=["users"])
-def read_me(
-        current_user: UserRead = Depends(get_current_user_by_id)
-) -> UserRead:
+def read_me(current_user: UserRead = Depends(get_current_user_by_id)) -> UserRead:
     return current_user
 
 
 @router.post("/reset_password", tags=["users"])
 async def reset_password(
-        email: str,
-        new_password: str,
-        db: AsyncSession = Depends(get_db)
+    email: str, new_password: str, db: AsyncSession = Depends(get_db)
 ) -> dict:
     db_user = await get_user_by_email(db, email)
     if not db_user:
