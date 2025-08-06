@@ -1,7 +1,9 @@
-from jose import jwt, JWTError
+from typing import Any
+
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from dependencies import SECRET_KEY, ALGORITHM
+from config import ALGORITHM, SECRET_KEY
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -14,12 +16,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def decode_token(token: str) -> str:
+def decode_token(token: str) -> dict[str, Any] | None:
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         return None

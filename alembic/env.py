@@ -1,9 +1,11 @@
 from logging.config import fileConfig
-from sqlalchemy import create_engine, pool
-from alembic import context
 
+from sqlalchemy import create_engine, pool
+
+from alembic import context
 from models import Base
-DATABASE_URL  = "sqlite:///./messcomm.db"
+
+DATABASE_URL = "sqlite:///./messcomm.db"
 
 # Конфігурація логера
 config = context.config
